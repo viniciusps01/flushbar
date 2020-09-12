@@ -10,6 +10,7 @@ const String FLUSHBAR_ROUTE_NAME = "/flushbarRoute";
 
 typedef void FlushbarStatusCallback(FlushbarStatus status);
 typedef void OnTap(Flushbar flushbar);
+typedef void OnWillPop();
 
 /// A highly customizable widget so you can notify your user when you fell like he needs a beautiful explanation.
 class Flushbar<T> extends StatefulWidget {
@@ -33,6 +34,7 @@ class Flushbar<T> extends StatefulWidget {
       Gradient backgroundGradient,
       Widget mainButton,
       OnTap onTap,
+      OnWillPop onWillPop,
       Duration duration,
       bool isDismissible = true,
       FlushbarDismissDirection dismissDirection =
@@ -70,6 +72,7 @@ class Flushbar<T> extends StatefulWidget {
         this.backgroundGradient = backgroundGradient,
         this.mainButton = mainButton,
         this.onTap = onTap,
+        this.onWillPop = onWillPop,
         this.duration = duration,
         this.isDismissible = isDismissible,
         this.dismissDirection = dismissDirection,
@@ -134,6 +137,9 @@ class Flushbar<T> extends StatefulWidget {
 
   /// A callback that registers the user's click anywhere. An alternative to [mainButton]
   final OnTap onTap;
+
+   /// A callback that registers the back button pressed
+  final OnWillPop onWillPop;
 
   /// How long until Flushbar will hide itself (be dismissed). To make it indefinite, leave it null.
   final Duration duration;
@@ -377,22 +383,33 @@ class _FlushbarState<K extends Object> extends State<Flushbar>
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      heightFactor: 1.0,
-      child: Material(
-        color: widget.flushbarStyle == FlushbarStyle.FLOATING
-            ? Colors.transparent
-            : widget.backgroundColor,
-        child: SafeArea(
-          minimum: widget.flushbarPosition == FlushbarPosition.BOTTOM
-              ? EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom)
-              : EdgeInsets.only(top: MediaQuery.of(context).viewInsets.top),
-          bottom: widget.flushbarPosition == FlushbarPosition.BOTTOM,
-          top: widget.flushbarPosition == FlushbarPosition.TOP,
-          left: false,
-          right: false,
-          child: _getFlushbar(),
+    return WillPopScope(
+      onWillPop: () async {
+        print('WILL POP GOT CALLED');
+        if (widget.onWillPop == null) {
+          return true;
+        } else {
+          widget.onWillPop();
+          return false;
+        }
+      },
+      child: Align(
+        heightFactor: 1.0,
+        child: Material(
+          color: widget.flushbarStyle == FlushbarStyle.FLOATING
+              ? Colors.transparent
+              : widget.backgroundColor,
+          child: SafeArea(
+            minimum: widget.flushbarPosition == FlushbarPosition.BOTTOM
+                ? EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom)
+                : EdgeInsets.only(top: MediaQuery.of(context).viewInsets.top),
+            bottom: widget.flushbarPosition == FlushbarPosition.BOTTOM,
+            top: widget.flushbarPosition == FlushbarPosition.TOP,
+            left: false,
+            right: false,
+            child: _getFlushbar(),
+          ),
         ),
       ),
     );
